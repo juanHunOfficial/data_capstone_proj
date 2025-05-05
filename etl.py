@@ -1,4 +1,5 @@
 import json
+import mysql.connector as dbconnection
 
 # --------------------------------------------------------------------------------------------------------------------
 
@@ -39,7 +40,45 @@ def transform(data: list, file_extension: str) -> list:
 # --------------------------------------------------------------------------------------------------------------------
 
 def load(clean_data: list, file_extension: str) -> None:
-    pass 
+    conn = mysql.connector.connect(
+        host='localhost',
+        user='your_username',
+        password='your_password'
+    )
+    cursor = conn.cursor()
+
+    # Create database if not exists
+    cursor.execute("CREATE DATABASE IF NOT EXISTS creditcard_capstone")
+    cursor.execute("USE creditcard_capstone")
+
+    # Create tables if not exists
+    if file_extension == 'branch':
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS CDW_SAPP_BRANCH (
+            BRANCH_CODE INT AUTO_INCREMENT PRIMARY KEY,
+            BRANCH_NAME VARCHAR(100),
+            BRANCH_STREET VARCHAR(100),
+            BRANCH_CITY VARCHAR(50),
+            BRANCH_STATE VARCHAR(50), 
+            BRANCH_ZIP VARCHAR(5),
+            BRANCH_PHONE VARCHAR(13),
+            LAST_UPDATED TIMESTAMP
+        )
+        """)
+    elif file_extension == 'credit':
+        pass
+    elif file_extension == 'customer':
+        pass
+
+    # Insert data into table
+    insert_query = "INSERT INTO users (name, age, email) VALUES (%s, %s, %s)" # and this ------------------------
+    for row in clean_data:
+        cursor.execute(insert_query, (row['name'], row['age'], row['email']))
+
+    # Commit changes and close connection
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 # --------------------------------------------------------------------------------------------------------------------
 
