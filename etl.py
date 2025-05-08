@@ -1,5 +1,7 @@
 import json
 import mysql.connector as dbconnection
+import pandas as pd
+
 
 # --------------------------------------------------------------------------------------------------------------------
 
@@ -13,29 +15,45 @@ def extract(file_extension: str) -> list:
 # --------------------------------------------------------------------------------------------------------------------
 
 def transform(data: list, file_extension: str) -> list:
-    
-    if file_extension == 'branch':
-        for item in data:
-            if not item.get('BRANCH_ZIP'):
-                item['BRANCH_ZIP'] = 99999
-            number = item.get('BRANCH_PHONE')
-            item['BRANCH_PHONE'] = f"({number[:3]}){number[3:6]}-{number[6:]}"
-    
-    elif file_extension == "credit":
-        for item in data:
-            item['TIMEID'] = int(f"{item.get('YEAR')}{item.get('MONTH')}{item.get('DAY')}")
-    
-    elif file_extension == 'customer':
-        for item in data:
-            first_name, middle_name, last_name = item.get('FIRST_NAME').strip(), item.get('MIDDLE_NAME').strip(), item.get('LAST_NAME').strip()
-            item['FIRST_NAME'] = f"{first_name[0].upper()}{first_name[1:]}"
-            item['MIDDLE_NAME'] = f"{middle_name.lower()}"
-            item['LAST_NAME'] = f"{last_name[0].upper()}{last_name[1:]}"
-            item['FULL_STREET_ADDRESS'] = f'{item.get('STREET_NAME')}, {item.get('APT_NO')}'
-            number = str(item.get('CUST_PHONE'))
-            item['CUST_PHONE'] = f"({number[:3]}){number[3:6]}-{number[6:]}"
+    # Starting DataFrame
+    df = pd.DataFrame(data)
 
-    return data
+    # make sure to access the branch logic for the branch file_extension 
+    if file_extension == 'branch':         
+
+        # Fill missing 'BRANCH_ZIP' with 99999
+        df['BRANCH_ZIP'] = df['BRANCH_ZIP'].fillna(99999)
+
+        # Format 'BRANCH_PHONE' to (XXX)XXX-XXXX
+        df['BRANCH_PHONE'] = df['BRANCH_PHONE'].apply(lambda x: f"({x[:3]}){x[3:6]}-{x[6:]}" if pd.notnull(x) and len(x) == 10 else x)
+    # make sure to access the credit logic for the branch file_extension 
+    elif file_extension == "credit":
+        # Ensure YEAR, MONTH, and DAY are strings and zero-padded if necessary
+        df['TIMEID'] = (
+            df['YEAR'].astype(str).str.zfill(4) +
+            df['MONTH'].astype(str).str.zfill(2) +
+            df['DAY'].astype(str).str.zfill(2)
+        ).astype(int)
+    # make sure to access the customer logic for the branch file_extension 
+    elif file_extension == 'customer':
+        # Capitalize first name: only first letter upper
+        df['FIRST_NAME'] = df['FIRST_NAME'].str.strip().str.capitalize()
+
+        # Lowercase middle name
+        df['MIDDLE_NAME'] = df['MIDDLE_NAME'].str.strip().str.lower()
+
+        # Capitalize last name: only first letter upper
+        df['LAST_NAME'] = df['LAST_NAME'].str.strip().str.capitalize()
+
+        # Combine street and apartment into full address
+        df['FULL_STREET_ADDRESS'] = df['STREET_NAME'].str.strip() + ', ' + df['APT_NO'].astype(str).str.strip()
+
+        # Format CUST_PHONE as (XXX)XXX-XXXX
+        df['CUST_PHONE'] = df['CUST_PHONE'].astype(str).apply(
+            lambda x: f"({x[:3]}){x[3:6]}-{x[6:]}" if pd.notnull(x) and len(x) == 10 else x
+        )
+
+    return df.to_dict(orient='records') # convert back to a list of dicts
 
 # --------------------------------------------------------------------------------------------------------------------
 
