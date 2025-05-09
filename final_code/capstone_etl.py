@@ -19,7 +19,6 @@ def extract():
 # ---------------------------------------------------------------------------------------------------------------
 def transform(df_branch, df_customer, df_credit) -> tuple:
 
-
     # Fill missing 'BRANCH_ZIP' with 99999
     df_branch = df_branch.fillna({'BRANCH_ZIP': 99999})
 
@@ -37,6 +36,7 @@ def transform(df_branch, df_customer, df_credit) -> tuple:
     # df_branch.show(10)
 
     # =========================================================================
+    # rename the <old_column_name> with the <new_column_name>
     df_credit = df_credit.withColumnRenamed("CREDIT_CARD_NO", "CUST_CC_NO")
 
     df_credit = df_credit.withColumn(
@@ -86,22 +86,25 @@ def transform(df_branch, df_customer, df_credit) -> tuple:
     return df_branch, df_customer, df_credit
 # ---------------------------------------------------------------------------------------------------------------
 def make_db_and_tables():
+    # make connection
     conn = dbconnection.connect(
         host='localhost',
         user='root',
         password='password'
     )
+    # make the cursor object
     cursor = conn.cursor()
     
     # Create database if not exists
     cursor.execute("CREATE DATABASE IF NOT EXISTS creditcard_capstone")
+    # Once it exists, use the db going forward
     cursor.execute("USE creditcard_capstone")
     # =========================================================================
     # Create tables if not exists
     # CDW_SAPP_BRANCH
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS CDW_SAPP_BRANCH (
-            BRANCH_CODE INT AUTO_INCREMENT PRIMARY KEY,
+            BRANCH_CODE INT PRIMARY KEY,
             BRANCH_NAME VARCHAR(100),
             BRANCH_STREET VARCHAR(100),
             BRANCH_CITY VARCHAR(50),
