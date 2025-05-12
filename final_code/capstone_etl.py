@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import concat, lit, substring, lpad, col, initcap, lower, trim, concat_ws
 import mysql.connector as dbconnection
+import requests
 # ---------------------------------------------------------------------------------------------------------------
 # NOTE: remember that you need to use a raw string because of the windows configuration
 spark = SparkSession.builder \
@@ -9,13 +10,16 @@ spark = SparkSession.builder \
             .getOrCreate()
 # ---------------------------------------------------------------------------------------------------------------
 def extract():
-    
-    # gather the nessesary data from their data sources and assign them variable names.
+    # from the api
+    res = requests.get("https://raw.githubusercontent.com/platformps/LoanDataset/main/loan_data.json") 
+    json_data = res.json()
+    df_loan = spark.createDataFrame(json_data)
+    # gather the necessary data from their data sources and assign them variable names.
     df_branch =spark.read.option("multiLine", True).json('../origin_data/cdw_sapp_branch.json')
     df_customer =spark.read.option("multiLine", True).json('../origin_data/cdw_sapp_customer.json')
     df_credit =spark.read.option("multiLine", True).json('../origin_data/cdw_sapp_credit.json')
 
-    return df_branch, df_customer, df_credit
+    return df_branch, df_customer, df_credit, df_loan
 # ---------------------------------------------------------------------------------------------------------------
 def transform(df_branch, df_customer, df_credit) -> tuple:
 
@@ -146,13 +150,28 @@ def make_db_and_tables():
                 FOREIGN KEY (BRANCH_CODE) REFERENCES CDW_SAPP_BRANCH(BRANCH_CODE)
             )
         """)
+    # CDW_SAPP_LOAN_APPLICATION
+    cursor.execute("""
+            CREATE TABLE IF NOT EXISTS CDW_SAPP_LOAN_APPLICATION (
+                APPLICATION_ID VARCHAR(30) PRIMARY KEY,
+                APPLICATION_STATUS VARCHAR(2),
+                CREDIT_HISTORY INT,
+                DEPENDENTS CHAR(3),
+                EDUCATION VARCHAR(12),
+                GENDER VARCHAR(20),
+                INCOME VARCHAR(20),
+                MARRIED CHAR(3),
+                PROPERTY_AREA VARCHAR(20),
+                SELF_EMPLOYED VARCHAR(20)
+            )
+        """)
     # =========================================================================
     # Commit changes and close connection
     conn.commit()
     cursor.close()
     conn.close()
 # ---------------------------------------------------------------------------------------------------------------
-def load(df_branch, df_customer, df_credit) -> tuple:
+def load(df_branch, df_customer, df_credit, df_loan) -> tuple:
     # MySQL JDBC connection properties
     url = "jdbc:mysql://localhost:3306/creditcard_capstone"  # Update with your DB details
     properties = {
@@ -167,11 +186,13 @@ def load(df_branch, df_customer, df_credit) -> tuple:
     df_customer.write.jdbc(url=url, table="CDW_SAPP_CUSTOMER", mode="append", properties=properties)
     # CDW_SAPP_CREDIT_CARD
     df_credit.write.jdbc(url=url, table="CDW_SAPP_CREDIT_CARD", mode="append", properties=properties)
+    # CDW_SAPP_LOAN_APPLICATION
+    df_loan.write.jdbc(url=url, table="CDW_SAPP_LOAN_APPLICATION", mode="append", properties=properties)
 # ---------------------------------------------------------------------------------------------------------------
 def main():
     print("Starting the ETL process")
     # extract the data needed (pyspark)
-    df_branch, df_customer, df_credit = extract()
+    df_branch, df_customer, df_credit, df_loan = extract()
     print("Extraction complete")
     print() # for spacing
     # transform (pyspark)
@@ -183,7 +204,7 @@ def main():
     print("Database and tables created")
     print() # for spacing
     # load into the db (pyspark)
-    load(df_branch, df_customer, df_credit)
+    load(df_branch, df_customer, df_credit, df_loan)
     print("Loading complete")
     print() # for spacing
     print("Finished the ETL process")
