@@ -64,7 +64,7 @@ def load(clean_data: list, file_extension: str) -> None:
         password='password'
     )
     cursor = conn.cursor()
-
+    
     # Create database if not exists
     cursor.execute("CREATE DATABASE IF NOT EXISTS creditcard_capstone")
     cursor.execute("USE creditcard_capstone")
