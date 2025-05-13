@@ -1,7 +1,7 @@
 import mysql.connector as dbconnection
 import pandas as pd
 # ----------------------------------------------------------------------------------------------
-def display_menu(cursor: object) -> None:
+def display_menu(conn: object, cursor: object) -> None:
     while True:
         # take in input from the menu while it is not '3' which is the sentinel value
         res = input(
@@ -16,16 +16,17 @@ def display_menu(cursor: object) -> None:
         if res == '1':
             transaction_details(cursor)
         elif res == '2':
-            customer_details(cursor)
+            customer_details(conn, cursor)
             print("2 works")
         elif res == '3':
+            conn.close()
             break
         else:
             print() # added to give some extra white space
             print("Sorry that was an invalid entry please try again.")
             print() # added to give some extra white space
 # ----------------------------------------------------------------------------------------------
-def establish_db_conn() -> object:
+def establish_db_conn() -> tuple:
     # make connection
     conn = dbconnection.connect(
         host='localhost',
@@ -34,7 +35,7 @@ def establish_db_conn() -> object:
         password='password'
     )
     # make and return the cursor object
-    return conn.cursor()
+    return conn, conn.cursor()
 # ----------------------------------------------------------------------------------------------
 def transaction_details(cursor: object) -> None:
     # .strip() will be added to each one to remove extra white space.
@@ -98,7 +99,7 @@ def transaction_details(cursor: object) -> None:
         print(df)
     print()# added for spacing and clarity
 # ----------------------------------------------------------------------------------------------
-def customer_details(cursor: object) -> None:
+def customer_details(conn: object, cursor: object) -> None:
     # Displaying customer info
     while True:
         try:
@@ -141,42 +142,80 @@ def customer_details(cursor: object) -> None:
 
     # Updating customer info
     while True:
-        valid_options = [
-            "SSN", 
-            "First Name", 
-            "Middle Name", 
-            "Last Name",
-            "Credit Card No",
-            "Full Street Address",
-            "City",
-            "State",
-            "Country",
-            "Zip",
-            "Phone",
-            "Email",
-            "Last Updated"
-        ]
-        
+        options = {
+            3: "First Name", 
+            4: "Middle Name", 
+            5: "Last Name",
+            6: "Credit Card No",
+            7: "Full Street Address",
+            8: "City",
+            9: "State",
+            10: "Country",
+            11: "Zip",
+            12: "Phone",
+            13: "Email"
+        }
+        update_data = {}
         try:
-            print("You can exit at any time by pressing 0")
-            f_name = input("Enter the new first name: ").strip()
-            m_name = input("Enter the new middle name: ").strip()
-            l_name = input("Enter the new last name: ").strip()
-            cc_number = input("Enter the new credit card number: ").strip()
-            full_address = input("Enter the new full address(street, apt no): ").strip()
-            city = input("Enter the new city: ").strip()
-            state = input("Enter the new state: ").strip()
-            country = input("Enter the new country: ").strip()
-            zipcode = input("Enter the new zipcode: ").strip()
-            phone = input("Enter the new phone: ").strip()
-            email = input("Enter the new email: ").strip()
+            print("Enter 0 at anytime to exit to the main menu without saving.") # make a sentinel value
+            print("Enter 1 for information on the valid choices.")
+            print("Enter 2 to update the record and commit your changes.")
+            option = input("Enter the field you wish to update: ").strip()
+            new_val = input("Enter the new value you would like to change it to: ").strip()
+            # match the option to the appropriate value and reserve it for the set clause
+            if option in options:
+                match option:
+                    case '3':
+                        update_data["first_name"] = new_val
+                    case '4':
+                        update_data["middle_name"] = new_val
+                    case '5':
+                        update_data["last_name"] = new_val
+                    case '6':
+                        update_data["credit_card_no"] = new_val
+                    case '7':
+                        update_data["full_street_address"] = new_val
+                    case '8':
+                        update_data["cust_city"] = new_val
+                    case '9':
+                        update_data["cust_state"] = new_val
+                    case '10':
+                        update_data["cust_country"] = new_val
+                    case '11':
+                        update_data["cust_zip"] = new_val
+                    case '12':
+                        update_data["cust_phone"] = new_val
+                    case '13':
+                        update_data["cust_email"] = new_val
         except Exception as e:
-            pass
+            print()# added for spacing and clarity
+            print("Error {e}".format(e))
+            print("Please try again...")
+            print()# added for spacing and clarity
+        if option == '0':
+            break
+        elif option == '1':
+            for key, value in options.items():
+                print("Option number: {key} -> {value}".format(key, value))
+        elif option == '2':
+            # build the set clause dynamically
+            set_clause = ", ".join([f"{key} = %s" for key in update_data.keys()])
+            values = list(update_data.values()) #these are the values for the set clause
+            values.append(customer_ssn) # add this at the end of the list for the final %s in the where clause
 
+            update_query = (
+                """
+                    update cdw_sapp_customer
+                    set {set_clause}
+                    where ssn = %s
+                """.format(set_clause))
+            cursor.execute(update_query, values)
+            conn.commit()
+            break
 # ----------------------------------------------------------------------------------------------
 def main():
-    cursor = establish_db_conn()
-    display_menu(cursor)
+    conn, cursor = establish_db_conn()
+    display_menu(conn, cursor)
 # ----------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     main()
