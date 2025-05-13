@@ -161,7 +161,9 @@ def customer_details(conn: object, cursor: object) -> None:
             print("Enter 0 at anytime to exit to the main menu without saving.") # make a sentinel value
             print("Enter 1 for information on the valid choices.")
             print("Enter 2 to update the record and commit your changes.")
+            print()# added for spacing and clarity
             option = input("Enter the field you wish to update: ").strip()
+            print()# added for spacing and clarity
 
             if option in options:
                 # suggestions for formatting the data that has more structure.
