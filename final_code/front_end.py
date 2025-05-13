@@ -17,7 +17,6 @@ def display_menu(conn: object, cursor: object) -> None:
             transaction_details(cursor)
         elif res == '2':
             customer_details(conn, cursor)
-            print("2 works")
         elif res == '3':
             conn.close()
             break
@@ -104,8 +103,9 @@ def customer_details(conn: object, cursor: object) -> None:
     while True:
         try:
             # make 0 the sentinel value
-            customer_ssn = int(input("Enter the customers 9-digit social security number to continue or 0 to return to the main menu: ")) 
+            customer_ssn = input("Enter the customers 9-digit social security number to continue or 0 to return to the main menu: ")
             if len(customer_ssn) == 9:
+                customer_ssn = int(customer_ssn)
                 cursor.execute("""
                     select * 
                     from cdw_sapp_customer
@@ -141,74 +141,64 @@ def customer_details(conn: object, cursor: object) -> None:
             print()# added for spacing and clarity
 
     # Updating customer info
+    update_data = {}
     while True:
         options = {
-            3: "First Name", 
-            4: "Middle Name", 
-            5: "Last Name",
-            6: "Credit Card No",
-            7: "Full Street Address",
-            8: "City",
-            9: "State",
-            10: "Country",
-            11: "Zip",
-            12: "Phone",
-            13: "Email"
+            '3': "first_name", 
+            '4': "middle_name", 
+            '5': "last_name",
+            '6': "credit_card_no",
+            '7': "full_street_address",
+            '8': "cust_city",
+            '9': "cust_state",
+            '10': "cust_country",
+            '11': "cust_zip",
+            '12': "cust_phone",
+            '13': "cust_email"
         }
-        update_data = {}
         try:
+            print()# added for spacing and clarity
             print("Enter 0 at anytime to exit to the main menu without saving.") # make a sentinel value
             print("Enter 1 for information on the valid choices.")
             print("Enter 2 to update the record and commit your changes.")
             option = input("Enter the field you wish to update: ").strip()
-            new_val = input("Enter the new value you would like to change it to: ").strip()
+
+            if option in options:
+                # suggestions for formatting the data that has more structure.
+                if option == '7':
+                    print("Enter the address as follows (Street Name, Apt No)")
+                elif option == '12':
+                    print("The phone number format is as follows (XXX)XXX-XXXX") 
+
+                new_val = input("Enter the new value you would like to change it to: ").strip()
             # match the option to the appropriate value and reserve it for the set clause
             if option in options:
-                match option:
-                    case '3':
-                        update_data["first_name"] = new_val
-                    case '4':
-                        update_data["middle_name"] = new_val
-                    case '5':
-                        update_data["last_name"] = new_val
-                    case '6':
-                        update_data["credit_card_no"] = new_val
-                    case '7':
-                        update_data["full_street_address"] = new_val
-                    case '8':
-                        update_data["cust_city"] = new_val
-                    case '9':
-                        update_data["cust_state"] = new_val
-                    case '10':
-                        update_data["cust_country"] = new_val
-                    case '11':
-                        update_data["cust_zip"] = new_val
-                    case '12':
-                        update_data["cust_phone"] = new_val
-                    case '13':
-                        update_data["cust_email"] = new_val
+                update_data[options[option]] = new_val
         except Exception as e:
             print()# added for spacing and clarity
-            print("Error {e}".format(e))
+            print("Error {}".format(e))
             print("Please try again...")
             print()# added for spacing and clarity
+        # print(update_data) # for testing purposes
+        # handling the other input values not contained in options
         if option == '0':
             break
         elif option == '1':
             for key, value in options.items():
-                print("Option number: {key} -> {value}".format(key, value))
+                print("Option number: {} -> {}".format(key, value.replace('cust_', '').replace('_', ' ').title()))
         elif option == '2':
             # build the set clause dynamically
             set_clause = ", ".join([f"{key} = %s" for key in update_data.keys()])
+            # print(set_clause) # for testing purposes
             values = list(update_data.values()) #these are the values for the set clause
             values.append(customer_ssn) # add this at the end of the list for the final %s in the where clause
-
+            
             update_query = (
                 """
                     update cdw_sapp_customer
                     set {set_clause}
                     where ssn = %s
-                """.format(set_clause))
+                """.format(set_clause=set_clause))
             cursor.execute(update_query, values)
             conn.commit()
             break
