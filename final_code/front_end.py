@@ -34,7 +34,7 @@ def transaction_details():
             Your value: """).strip()
         if len(zipcode) == 5:
             try:
-                zipcode = int(zipcode)
+                zipcode = int(zipcode) # in the db it is saved as a string, this is to check and make sure it is a valid number. 
                 break
             except Exception as e:
                 print() # Added for white space and clarity 
@@ -70,6 +70,28 @@ def transaction_details():
     # query the db and retrieve a list of transactions made by customers in the specified zipcode for the given month and year
     # query the db and retrieve the data
     
+    # make connection
+    conn = dbconnection.connect(
+        host='localhost',
+        database='creditcard_capstone',
+        user='root',
+        password='password'
+    )
+    # make the cursor object
+    cursor = conn.cursor()
+    # run query
+    cursor.execute("""
+        select concat(cu.first_name, " ", cu.last_name) as full_name , cc.transaction_id, day(cc.timeid)
+        from cdw_sapp_credit_card cc
+        left join cdw_sapp_customer cu on cc.cust_ssn = cu.ssn
+        where cu.cust_zip = %s and month(timeid) = %s and year(timeid) = %s
+        order by day(timeid) desc
+    """, (zipcode, month, year))
+    # retrieve the values and save them into a variable to be converted into a df
+    data = cursor.fetchall()
+    df = pd.DataFrame(data, columns=["Full Name", "Transaction ID", "Day of Purchase"])
+    print(df)
+    print()# added for spacing and clarity
 # ----------------------------------------------------------------------------------------------
 def main():
     display_menu()
