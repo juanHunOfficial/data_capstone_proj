@@ -44,7 +44,7 @@ def display_menu(conn: object, cursor: object) -> None:
         elif res == '2':
             customer_details(conn, cursor)
         elif res == '3':
-            monthly_bill_details(conn, cursor)
+            monthly_bill_details(cursor)
         elif res == '4':
             transactions_in_date_range(conn, cursor)
         elif res == '0':
@@ -89,8 +89,8 @@ def transaction_details(cursor: object) -> None:
             This function is used to display the transaction details of a group of customers in a given zipcode and for a 
             specified month and year. The output is sorted in descending order by day and displays the following columns 
             ("Full Name", "Transaction ID", "Day of Purchase"). The function begins by running a while loop that will only 
-            terminate when a valid zipcode is entered. The second while loop does the same and will only terminate when a 
-            valid month and year are received. And finally the query is declared and ran, the results are then made into a 
+            terminate when a valid zipcode is entered. Then the user will be prompted for a valid month and year in the 
+            get_month_and_year() function. And finally the query is declared and ran, the results are then made into a 
             pandas dataframe for readability and displayed to the user.
 
     """
@@ -131,7 +131,9 @@ def transaction_details(cursor: object) -> None:
     df = pd.DataFrame(data, columns=["Full Name", "Transaction ID", "Day of Purchase"])
     # only print if the df is filled
     if df.empty:
+        print()# added for spacing and clarity
         print("No matching results for the given parameters.")
+        print()# added for spacing and clarity
     else:
         print(df)
     print()# added for spacing and clarity
@@ -184,7 +186,9 @@ def customer_details(conn: object, cursor: object) -> None:
                     ])
                 # only print if the df is filled
                 if df.empty:
+                    print()# added for spacing and clarity
                     print("No matching results for the given parameters.")
+                    print()# added for spacing and clarity
                 else:
                     print(df)
                     break
@@ -260,10 +264,9 @@ def customer_details(conn: object, cursor: object) -> None:
             conn.commit()
             break
 # ----------------------------------------------------------------------------------------------
-def monthly_bill_details(conn: object, cursor: object) -> None:
+def monthly_bill_details(cursor: object) -> None:
     """
         Parameters explained: 
-            conn: is the connection object used for committing the data in this case.
             cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls.
 
         Return values:
@@ -271,38 +274,56 @@ def monthly_bill_details(conn: object, cursor: object) -> None:
 
         Explanation of function:
             This function is used to query the database and generate a monthly bill for a given credit card number 
-            and month's timeframe(month and year). 
+            and month's timeframe(month and year). The first and only while loop wil check to make sure that a valid 
+            credit card has been entered. Then the user will be prompted for a valid month and year in the get_month_and_year()
+            function. Finally the database is queried and converted into a pandas dataframe, where we will extract the total
+            spent for the timeframe specified the breakdown in the form of the dataframe. 
     """
     while True: 
         # get the credit card number
         try:
-            cc_num = int(input("Enter a valid 16-digit credit card number, do not add and hyphens or special characters (e.g. 4210653349028689)").strip())
+            cc_num = input("Enter a valid 16-digit credit card number, do not add and hyphens or special characters (e.g. 4210653349028689)").strip()
+            if len(cc_num) == 16:
+                cc_num = int(cc_num) # this is for validation purposes, to make sure the value is a whole number
+                break # if everything passes break the loop
         except Exception as e:
             print()# added for spacing and clarity
             print("Error {}".format(e))
             print("Please try again...")
             print()# added for spacing and clarity
 
-        # get the month and the year
-        month, year = get_month_and_year()
-        # query the db for the desired output
-        cursor.execute(
-            """
-                select transaction_type, sum(transaction_value) as amount
-                from cdw_sapp_credit_card
-                where month(timeid) = %s and year(timeid) = %s and cust_cc_no = %s
-                group by transaction_type
-                order by amount desc;
-            """, (month, year, cc_num) 
-        ) # make sure to inject these values in the order they are called in the query 
+    # get the month and the year
+    month, year = get_month_and_year()
+    # query the db for the desired output
+    cursor.execute(
+        """
+            select transaction_type, sum(transaction_value) as amount
+            from cdw_sapp_credit_card
+            where month(timeid) = %s and year(timeid) = %s and cust_cc_no = %s
+            group by transaction_type
+            order by amount desc;
+        """, (month, year, cc_num) 
+    ) # make sure to inject these values in the order they are called in the query 
 
-        # store the output in a variable and convert it to a dataframe
-        data = cursor.fetchall()
-        df = pd.DataFrame(data, columns=["Category", "Amount Spent"])
-        # use the data from the data frame to get the total for the month and display the dataframe and the total to the user
-        
+    # store the output in a variable and convert it to a dataframe
+    data = cursor.fetchall()
+    df = pd.DataFrame(data, columns=["Category", "Amount Spent"])
+    # use the data from the data frame to get the total for the month and display the dataframe and the total to the user
+    total_amount = df['Amount Spent'].sum()
 
-    
+    # only print if the df is filled
+    if df.empty:
+        print()# added for spacing and clarity
+        print("No matching results for the given parameters.")
+        print()# added for spacing and clarity
+    else:
+        print()# added for spacing and clarity
+        print(f"""The total amount for spent in {month}/{year} is: ${total_amount}
+
+                Here's the break down: 
+                
+                {df}""")
+        print()# added for spacing and clarity
 # ----------------------------------------------------------------------------------------------
 def transactions_in_date_range(conn: object, cursor: object) -> None:
     """
@@ -318,6 +339,18 @@ def transactions_in_date_range(conn: object, cursor: object) -> None:
     pass
 # ----------------------------------------------------------------------------------------------
 def get_month_and_year() -> tuple:
+    """
+        Parameters explained: 
+            None
+
+        Return values:
+            This function returns a tuple which contains the month followed by the year variables.
+
+        Explanation of function:
+            This function was created because multiple locations required the same logic to be used. Therefore this 
+            while loop will prompt the user for the month and year and will only terminate when a valid month and year 
+            are received. 
+    """
     # gather the input for the month and year from one input string
     while True:
         user_input = input(
@@ -333,9 +366,13 @@ def get_month_and_year() -> tuple:
                 year = int(year_str)
                 break
             else:
+                print()# added for spacing and clarity
                 print("Invalid format. Make sure month is 2 digits and year is 4 digits.")
+                print()# added for spacing and clarity
         except ValueError:
+            print()# added for spacing and clarity
             print("Invalid input. Please enter the month and year separated by a space.")
+            print()# added for spacing and clarity
 
     return month, year
 # ----------------------------------------------------------------------------------------------
