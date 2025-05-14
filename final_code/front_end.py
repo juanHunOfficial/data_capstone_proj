@@ -2,13 +2,39 @@ import mysql.connector as dbconnection
 import pandas as pd
 # ----------------------------------------------------------------------------------------------
 def display_menu(conn: object, cursor: object) -> None:
+    """
+        Parameters explained: 
+            conn: is a database connection object that will be passed to each function that needs it to perform its tasks.
+            cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls. It is 
+                    passed and not invoked at the beginning of each function (e.g. conn.cursor()) for simplicity and readability.
+                    NOTE: The same results could have been achieved by simply passing the conn object and calling the cursor when needed.
+        
+        Return values:
+            None
+
+        Explanation of function:  
+            This function is used to display the menu that will be the main display for the customer
+            navigation options include: 
+            '
+                0) Quit
+                1) Display Transaction Details
+                2) Display Customer Details
+                3) Display Monthly Bill for Card Number Entered
+                4) Display Transactions Made by a Customer Between Two Dates
+            '   
+            The connection to the database is called in the main() function prior to calling this function 
+            and it returns the connection and cursor objects that will be passed as needed to each of the 
+            functions called. Refer to the documentation of each one to learn more. 
+    """
     while True:
         # take in input from the menu while it is not '3' which is the sentinel value
         res = input(
         """ Please make a selection:
+            0) Quit
             1) Display Transaction Details
             2) Display Customer Details
-            3) Quit
+            3) Display Monthly Bill for Card Number Entered
+            4) Display Transactions Made by a Customer Between Two Dates
 
             Enter your value here: """).strip() # add strip() to account for white space
         print() # added to give some extra white space
@@ -18,6 +44,10 @@ def display_menu(conn: object, cursor: object) -> None:
         elif res == '2':
             customer_details(conn, cursor)
         elif res == '3':
+            monthly_bill_details(conn, cursor)
+        elif res == '4':
+            transactions_in_date_range(conn, cursor)
+        elif res == '0':
             conn.close()
             break
         else:
@@ -26,6 +56,17 @@ def display_menu(conn: object, cursor: object) -> None:
             print() # added to give some extra white space
 # ----------------------------------------------------------------------------------------------
 def establish_db_conn() -> tuple:
+    """
+        Parameters explained: 
+            None 
+
+        Return values:
+            Tuple which contains the connection object (conn) and the cursor object (conn.cursor()).
+
+        Explanation of function: 
+            This function is making the initial one-time connection to the database 'creditcard_capstone' and returning a 
+            connection object and a cursor object that will be used to execute sql queries. 
+    """
     # make connection
     conn = dbconnection.connect(
         host='localhost',
@@ -37,6 +78,22 @@ def establish_db_conn() -> tuple:
     return conn, conn.cursor()
 # ----------------------------------------------------------------------------------------------
 def transaction_details(cursor: object) -> None:
+    """
+        Parameters explained: 
+            cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls.
+
+        Return values:
+            None
+
+        Explanation of function: 
+            This function is used to display the transaction details of a group of customers in a given zipcode and for a 
+            specified month and year. The output is sorted in descending order by day and displays the following columns 
+            ("Full Name", "Transaction ID", "Day of Purchase"). The function begins by running a while loop that will only 
+            terminate when a valid zipcode is entered. The second while loop does the same and will only terminate when a 
+            valid month and year are received. And finally the query is declared and ran, the results are then made into a 
+            pandas dataframe for readability and displayed to the user.
+
+    """
     # .strip() will be added to each one to remove extra white space.
     while True:
         zipcode = input(
@@ -58,27 +115,24 @@ def transaction_details(cursor: object) -> None:
             print() # Added for white space and clarity 
 
     while True:
-        month = input(
+        # gather the input for the month and year from one input string
+        user_input = input(
             """Enter a valid month and year below
-            NOTE: Use a 2-digit month followed by a 4-digit year like 05 for May and 1997 for the year.
+            NOTE: Use a 2-digit month followed by a 4-digit year, separated by a space (e.g., 05 1997):
 
-            The month: """).strip()
-        year = input("The year: ").strip()
-        if len(month) == 2 and len(year) == 4:
-            try:
-                month = int(month)
-                year = int(year)
+            Month and Year: """
+        ).strip()
+        try:
+            month_str, year_str = user_input.split() # splits the variables on the space
+            if len(month_str) == 2 and len(year_str) == 4:
+                month = int(month_str)
+                year = int(year_str)
                 break
-            except Exception as e:
-                print() # Added for white space and clarity 
-                print("Error: {e}".format(e))
-                print("Please try again...")
-                print() # Added for white space and clarity 
-        else:
-            print() # Added for white space and clarity 
-            print("Error, make sure your month is 2-digits and your year is 4-digits with no extra characters.")
-            print() # Added for white space and clarity 
-    
+            else:
+                print("Invalid format. Make sure month is 2 digits and year is 4 digits.")
+        except ValueError:
+            print("Invalid input. Please enter the month and year separated by a space.")
+        
     # query the db and retrieve a list of transactions made by customers in the specified zipcode for the given month and year
     # run query
     cursor.execute("""
@@ -99,6 +153,23 @@ def transaction_details(cursor: object) -> None:
     print()# added for spacing and clarity
 # ----------------------------------------------------------------------------------------------
 def customer_details(conn: object, cursor: object) -> None:
+    """
+        Parameters explained: 
+            conn: is the connection object used for committing the data in this case.
+            cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls.
+
+        Return values:
+            None
+
+        Explanation of function:
+            This function is used to display the customer details from the cdw_sapp_customer table found in the 
+            creditcard_capstone database. The first while loop is intended to display the customer details based
+            on the social security number that is entered. When the data is retrieved from the database it is then
+            converted to a pandas dataframe, displayed, and the while loop is terminated. The second while loop is the logic for updating the database
+            dynamically based on the parameters the user would like to change. The user will have to enter the column they
+            would like to change enter the value and submit it by entering in '2' in the menu. This will commit the 
+            changes and break the loop which ends the function. 
+    """
     # Displaying customer info
     while True:
         try:
@@ -205,7 +276,43 @@ def customer_details(conn: object, cursor: object) -> None:
             conn.commit()
             break
 # ----------------------------------------------------------------------------------------------
-def main():
+def monthly_bill_details(conn: object, cursor: object) -> None:
+    """
+        Parameters explained: 
+            conn: is the connection object used for committing the data in this case.
+            cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls.
+
+        Return values:
+            None
+
+        Explanation of function:
+    """
+    pass
+# ----------------------------------------------------------------------------------------------
+def transactions_in_date_range(conn: object, cursor: object) -> None:
+    """
+        Parameters explained: 
+            conn: is the connection object used for committing the data in this case.
+            cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls.
+
+        Return values:
+            None
+
+        Explanation of function:
+    """
+    pass
+# ----------------------------------------------------------------------------------------------
+def main() -> None:
+    """
+        Parameters explained: 
+            conn: is the connection object used for committing the data in this case.
+            cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls.
+
+        Return values:
+            None
+
+        Explanation of function:
+    """
     conn, cursor = establish_db_conn()
     display_menu(conn, cursor)
 # ----------------------------------------------------------------------------------------------
