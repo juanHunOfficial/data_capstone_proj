@@ -46,14 +46,12 @@ def display_menu(conn: object, cursor: object) -> None:
         elif res == '3':
             monthly_bill_details(cursor)
         elif res == '4':
-            transactions_in_date_range(conn, cursor)
+            transactions_in_date_range(cursor)
         elif res == '0':
             conn.close()
             break
         else:
-            print() # added to give some extra white space
-            print("Sorry that was an invalid entry please try again.")
-            print() # added to give some extra white space
+            print("\nSorry that was an invalid entry please try again.\n")
 # ----------------------------------------------------------------------------------------------
 def establish_db_conn() -> tuple:
     """
@@ -106,16 +104,12 @@ def transaction_details(cursor: object) -> None:
                 zipcode = int(zipcode) # in the db it is saved as a string, this is to check and make sure it is a valid number. 
                 break
             except Exception as e:
-                print() # Added for white space and clarity 
-                print("Invalid zipcode entry, please try again...")
-                print() # Added for white space and clarity 
+                print("\nInvalid zipcode entry, please try again...\n")
         else:
-            print() # Added for white space and clarity 
-            print("Error, make sure your typing in a 5-digit value...")
-            print() # Added for white space and clarity 
+            print("\nError, make sure your typing in a 5-digit value...\n")
 
     # get the month and the year
-    month, year = get_month_and_year()
+    year, month, _ = get_year_month_day() # the last variable is for the day but because we are not using it an '_' was used
         
     # query the db and retrieve a list of transactions made by customers in the specified zipcode for the given month and year
     # run query
@@ -131,12 +125,9 @@ def transaction_details(cursor: object) -> None:
     df = pd.DataFrame(data, columns=["Full Name", "Transaction ID", "Day of Purchase"])
     # only print if the df is filled
     if df.empty:
-        print()# added for spacing and clarity
-        print("No matching results for the given parameters.")
-        print()# added for spacing and clarity
+        print("\nNo matching results for the given parameters.\n")
     else:
-        print(df)
-    print()# added for spacing and clarity
+        print(f"\n{df}\n")
 # ----------------------------------------------------------------------------------------------
 def customer_details(conn: object, cursor: object) -> None:
     """
@@ -160,7 +151,7 @@ def customer_details(conn: object, cursor: object) -> None:
     while True:
         try:
             # make 0 the sentinel value
-            customer_ssn = input("Enter the customers 9-digit social security number to continue or 0 to return to the main menu: ")
+            customer_ssn = input("Enter the customers 9-digit social security number to continue or 0 to return to the main menu(e.g. 123459506): ")
             if len(customer_ssn) == 9:
                 customer_ssn = int(customer_ssn)
                 cursor.execute("""
@@ -186,18 +177,13 @@ def customer_details(conn: object, cursor: object) -> None:
                     ])
                 # only print if the df is filled
                 if df.empty:
-                    print()# added for spacing and clarity
-                    print("No matching results for the given parameters.")
-                    print()# added for spacing and clarity
+                    print("\nNo matching results for the given parameters.\n")
                 else:
-                    print(df)
+                    print(f"\n{df}\n")
                     break
-                print()# added for spacing and clarity
         except Exception as e:
-            print()# added for spacing and clarity
-            print("Error {e}".format(e))
-            print("Please try again...")
-            print()# added for spacing and clarity
+            print("\nError {e}".format(e))
+            print("Please try again...\n")
 
     # Updating customer info
     update_data = {}
@@ -216,11 +202,9 @@ def customer_details(conn: object, cursor: object) -> None:
             '13': "cust_email"
         }
         try:
-            print()# added for spacing and clarity
-            print("Enter 0 at anytime to exit to the main menu without saving.") # make a sentinel value
+            print("\nEnter 0 at anytime to exit to the main menu without saving.") # make a sentinel value
             print("Enter 1 for information on the valid choices.")
-            print("Enter 2 to update the record and commit your changes.")
-            print()# added for spacing and clarity
+            print("Enter 2 to update the record and commit your changes.\n")
             option = input("Enter the field you wish to update: ").strip()
             print()# added for spacing and clarity
 
@@ -236,10 +220,8 @@ def customer_details(conn: object, cursor: object) -> None:
             if option in options:
                 update_data[options[option]] = new_val
         except Exception as e:
-            print()# added for spacing and clarity
-            print("Error {}".format(e))
-            print("Please try again...")
-            print()# added for spacing and clarity
+            print("\nError {}".format(e))
+            print("Please try again...\n")
         # print(update_data) # for testing purposes
         # handling the other input values not contained in options
         if option == '0':
@@ -274,26 +256,16 @@ def monthly_bill_details(cursor: object) -> None:
 
         Explanation of function:
             This function is used to query the database and generate a monthly bill for a given credit card number 
-            and month's timeframe(month and year). The first and only while loop wil check to make sure that a valid 
-            credit card has been entered. Then the user will be prompted for a valid month and year in the get_month_and_year()
+            and month's timeframe(month and year). The first function will prompt the user for a valid credit card number in 
+            the get_credit_card_number() function. Then the user will be prompted for a valid month and year in the get_month_and_year()
             function. Finally the database is queried and converted into a pandas dataframe, where we will extract the total
             spent for the timeframe specified the breakdown in the form of the dataframe. 
     """
-    while True: 
-        # get the credit card number
-        try:
-            cc_num = input("Enter a valid 16-digit credit card number, do not add and hyphens or special characters (e.g. 4210653349028689)").strip()
-            if len(cc_num) == 16:
-                cc_num = int(cc_num) # this is for validation purposes, to make sure the value is a whole number
-                break # if everything passes break the loop
-        except Exception as e:
-            print()# added for spacing and clarity
-            print("Error {}".format(e))
-            print("Please try again...")
-            print()# added for spacing and clarity
+    # get the credit card number
+    cc_num = get_credit_card_number()
 
     # get the month and the year
-    month, year = get_month_and_year()
+    year, month, _ = get_year_month_day() # the last variable is for the day but because we are not using it an '_' was used
     # query the db for the desired output
     cursor.execute(
         """
@@ -313,68 +285,116 @@ def monthly_bill_details(cursor: object) -> None:
 
     # only print if the df is filled
     if df.empty:
-        print()# added for spacing and clarity
-        print("No matching results for the given parameters.")
-        print()# added for spacing and clarity
+        print("\nNo matching results for the given parameters.\n")
     else:
-        print()# added for spacing and clarity
-        print(f"""The total amount for spent in {month}/{year} is: ${total_amount}
-
-                Here's the break down: 
-                
-                {df}""")
-        print()# added for spacing and clarity
+        print(f"\nThe total amount for spent in {month}/{year} is: ${total_amount}\nHere's the break down:")
+        print(f"\n{df}\n")
 # ----------------------------------------------------------------------------------------------
-def transactions_in_date_range(conn: object, cursor: object) -> None:
+def transactions_in_date_range(cursor: object) -> None:
     """
         Parameters explained: 
-            conn: is the connection object used for committing the data in this case.
             cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls.
 
         Return values:
             None
 
         Explanation of function:
+            This function is used to display the transactions made by a customer between two dates ordered by year, 
+            month, and day in descending order.
     """
-    pass
+    # get the credit card number
+    cc_num = get_credit_card_number()
+    while True:
+        # get the year, month, and day for both dates and assign them custom variables
+        print("Enter the first date for the range")
+        year, month, day = get_year_month_day()
+        first_timeid = int(f"{year}{month}{day}")
+
+        print("Enter the second date for the range")
+        year, month, day = get_year_month_day()
+        second_timeid = int(f"{year}{month}{day}")
+
+        # check if the date range is good else prompt the user again
+        if first_timeid < second_timeid:
+            # cast the dates back into string from for the query, sql will not take them in integer format
+            first_timeid = str(first_timeid)
+            second_timeid = str(second_timeid)
+            break
+        else:
+            print("\nLooks like you enter the dates backwards, ensure to enter the earlier date first and then the later date...\n")
+
+    # print(first_timeid, " ", second_timeid)# for testing purposes, make sure this is commented out during production
+
+    # query the db for the desired output
+    cursor.execute(
+        """
+            select transaction_id, transaction_type, transaction_value, timeid
+            from cdw_sapp_credit_card
+            where cust_cc_no =  %s and timeid between %s and %s
+            order by year(timeid) desc, month(timeid) desc, day(timeid) desc;
+        """, (cc_num, first_timeid, second_timeid)
+    )
+    # store the output in a variable and convert it to a dataframe
+    data = cursor.fetchall()
+    df = pd.DataFrame(data, columns=["Transaction ID", "Category", "Transaction Amount", "Date of Purchase"])
+    
+    # display the data
+    print(f"These are all the transaction from {first_timeid} - {second_timeid}: ")
+    print(f"\n{df}\n")
 # ----------------------------------------------------------------------------------------------
-def get_month_and_year() -> tuple:
+def get_year_month_day() -> tuple:
     """
         Parameters explained: 
             None
 
         Return values:
-            This function returns a tuple which contains the month followed by the year variables.
+            This function returns a tuple which contains the year, month, and day variables.
 
         Explanation of function:
             This function was created because multiple locations required the same logic to be used. Therefore this 
-            while loop will prompt the user for the month and year and will only terminate when a valid month and year 
-            are received. 
+            while loop will prompt the user for the year, month, and day separated by a space and will only return when 
+            a valid year, month, and day are received. 
     """
-    # gather the input for the month and year from one input string
+    # Gather the input for year, month, and day from one input string
     while True:
         user_input = input(
-            """Enter a valid month and year below
-            NOTE: Use a 2-digit month followed by a 4-digit year, separated by a space (e.g., 05 1997):
+            """Enter a valid date below
+            NOTE: Use a 4-digit year, 2-digit month, and 2-digit day separated by spaces (e.g., 2023 05 14):
 
-            Month and Year: """
+            Year Month Day: """
         ).strip()
         try:
-            month_str, year_str = user_input.split() # splits the variables on the space
-            if len(month_str) == 2 and len(year_str) == 4:
-                month = int(month_str)
-                year = int(year_str)
-                break
+            year, month, day = user_input.split()  # Split on space
+            if len(year) == 4 and len(month) == 2 and len(day) == 2:
+                return year, month, day
             else:
-                print()# added for spacing and clarity
-                print("Invalid format. Make sure month is 2 digits and year is 4 digits.")
-                print()# added for spacing and clarity
+                print("\nInvalid format. Make sure year is 4 digits, month and day are 2 digits each.\n")
         except ValueError:
-            print()# added for spacing and clarity
-            print("Invalid input. Please enter the month and year separated by a space.")
-            print()# added for spacing and clarity
+            print("\nInvalid input. Please enter year, month, and day separated by spaces.\n")
+# ----------------------------------------------------------------------------------------------
+def get_credit_card_number() -> int:
+    """
+        Parameters explained: 
+            None
 
-    return month, year
+        Return values:
+            This function returns an integer value containing the valid credit card number. 
+
+        Explanation of function:
+            This function was created because multiple locations required the same logic to be used. Therefore this 
+            while loop will check to make sure that a valid credit card has been entered. When an input is 16 characters 
+            long the variable will be converted to an integer to make sure it is a number and return the value.
+    """
+    while True: 
+        # get the credit card number
+        try:
+            cc_num = input("Enter a valid 16-digit credit card number, do not add and hyphens or special characters (e.g. 4210653349028689): ").strip()
+            if len(cc_num) == 16:
+                cc_num = int(cc_num) # this is for validation purposes, to make sure the value is a whole number
+                return cc_num # if everything passes return the credit card number
+        except Exception as e:
+            print("\nError {}".format(e))
+            print("Please try again...\n")
 # ----------------------------------------------------------------------------------------------
 def main() -> None:
     """
