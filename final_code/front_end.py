@@ -114,24 +114,8 @@ def transaction_details(cursor: object) -> None:
             print("Error, make sure your typing in a 5-digit value...")
             print() # Added for white space and clarity 
 
-    while True:
-        # gather the input for the month and year from one input string
-        user_input = input(
-            """Enter a valid month and year below
-            NOTE: Use a 2-digit month followed by a 4-digit year, separated by a space (e.g., 05 1997):
-
-            Month and Year: """
-        ).strip()
-        try:
-            month_str, year_str = user_input.split() # splits the variables on the space
-            if len(month_str) == 2 and len(year_str) == 4:
-                month = int(month_str)
-                year = int(year_str)
-                break
-            else:
-                print("Invalid format. Make sure month is 2 digits and year is 4 digits.")
-        except ValueError:
-            print("Invalid input. Please enter the month and year separated by a space.")
+    # get the month and the year
+    month, year = get_month_and_year()
         
     # query the db and retrieve a list of transactions made by customers in the specified zipcode for the given month and year
     # run query
@@ -286,8 +270,39 @@ def monthly_bill_details(conn: object, cursor: object) -> None:
             None
 
         Explanation of function:
+            This function is used to query the database and generate a monthly bill for a given credit card number 
+            and month's timeframe(month and year). 
     """
-    pass
+    while True: 
+        # get the credit card number
+        try:
+            cc_num = int(input("Enter a valid 16-digit credit card number, do not add and hyphens or special characters (e.g. 4210653349028689)").strip())
+        except Exception as e:
+            print()# added for spacing and clarity
+            print("Error {}".format(e))
+            print("Please try again...")
+            print()# added for spacing and clarity
+
+        # get the month and the year
+        month, year = get_month_and_year()
+        # query the db for the desired output
+        cursor.execute(
+            """
+                select transaction_type, sum(transaction_value) as amount
+                from cdw_sapp_credit_card
+                where month(timeid) = %s and year(timeid) = %s and cust_cc_no = %s
+                group by transaction_type
+                order by amount desc;
+            """, (month, year, cc_num) 
+        ) # make sure to inject these values in the order they are called in the query 
+
+        # store the output in a variable and convert it to a dataframe
+        data = cursor.fetchall()
+        df = pd.DataFrame(data, columns=["Category", "Amount Spent"])
+        # use the data from the data frame to get the total for the month and display the dataframe and the total to the user
+        
+
+    
 # ----------------------------------------------------------------------------------------------
 def transactions_in_date_range(conn: object, cursor: object) -> None:
     """
@@ -301,6 +316,28 @@ def transactions_in_date_range(conn: object, cursor: object) -> None:
         Explanation of function:
     """
     pass
+# ----------------------------------------------------------------------------------------------
+def get_month_and_year() -> tuple:
+    # gather the input for the month and year from one input string
+    while True:
+        user_input = input(
+            """Enter a valid month and year below
+            NOTE: Use a 2-digit month followed by a 4-digit year, separated by a space (e.g., 05 1997):
+
+            Month and Year: """
+        ).strip()
+        try:
+            month_str, year_str = user_input.split() # splits the variables on the space
+            if len(month_str) == 2 and len(year_str) == 4:
+                month = int(month_str)
+                year = int(year_str)
+                break
+            else:
+                print("Invalid format. Make sure month is 2 digits and year is 4 digits.")
+        except ValueError:
+            print("Invalid input. Please enter the month and year separated by a space.")
+
+    return month, year
 # ----------------------------------------------------------------------------------------------
 def main() -> None:
     """
