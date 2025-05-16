@@ -171,12 +171,12 @@ def make_db_and_tables():
     cursor.close()
     conn.close()
 # ---------------------------------------------------------------------------------------------------------------
-def load(df_branch, df_customer, df_credit, df_loan) -> tuple:
+def load(df_branch, df_customer, df_credit, df_loan) -> None:
     # MySQL JDBC connection properties
-    url = "jdbc:mysql://localhost:3306/creditcard_capstone"  # Update with your DB details
+    url = "jdbc:mysql://localhost:3306/creditcard_capstone"  
     properties = {
-        "user": "root",   # Replace with your MySQL username
-        "password": "password",  # Replace with your MySQL password
+        "user": "root",   
+        "password": "password",  
         "driver": "com.mysql.cj.jdbc.Driver"
     }
     # Write the data to MySQL 
