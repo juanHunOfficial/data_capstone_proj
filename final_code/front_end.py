@@ -30,6 +30,7 @@ def display_menu(conn: object, cursor: object) -> None:
         # take in input from the menu while it is not '3' which is the sentinel value
         res = input(
         """ Please make a selection:
+        
             0) Quit
             1) Display Transaction Details
             2) Display Customer Details
