@@ -12,8 +12,9 @@ def main() -> None:
     etl = Etl_Pipeline()
     etl.run()
     # Now with the data in place make the visuals
-    visuals = Visualizations() # <----- revisit this and see if there is a way to simply call the ones you need in the menu
+    visuals = Visualizations(db.cursor)
+    
     # Display the menu and have it run as needed
-
+    
 if __name__ == "__main__":
     main()

@@ -6,11 +6,9 @@ import calendar
 
 class Visualizations:
 
-    def __init__(self)  -> object:
-        # make the db connection but do not assign it, it will be discarded when the function 
-        # finished executing (only the cursor is needed for the visualizations)
-        conn = DB_Connector(host='localhost', user='root', password='password')
-        self.cursor = conn.cursor()
+    def __init__(self, cursor: object) -> object:
+        # (only the cursor is needed for the visualizations)
+        self.cursor = cursor
         # now select the database you wish to use.
         self.cursor.execute("use creditcard_capstone")
  # ----------------------------------------------------------------------------------------------
