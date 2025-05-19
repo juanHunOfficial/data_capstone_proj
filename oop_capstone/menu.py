@@ -3,6 +3,13 @@ import pandas as pd
 class Menu:
 
     def __init__(self, conn: object, cursor: object) -> object: 
+        """
+            Explanation of function:
+                This is the Menu class' constructor. The connection and cursor are passed from the main.py.
+                The options dictionary is used for accessing the primary methods that wil be used in this
+                class, the helper methods are called as needed throughout these 4 main functions for easier
+                troubleshooting.  
+        """
         self.conn = conn
         self.cursor = cursor
         self.options = {
