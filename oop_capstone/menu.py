@@ -16,9 +16,9 @@ class Menu:
         self.options = {
             '0' : self.close_connection,
             '1' : self.transaction_details,
-            '2' : Menu.customer_details,
-            '3' : Menu.monthly_bill_details,
-            '4' : Menu.transactions_in_date_range
+            '2' : self.customer_details,
+            '3' : self.monthly_bill_details,
+            '4' : self.transactions_in_date_range
         }
  # ----------------------------------------------------------------------------------------------
     def close_connection(self) -> None:

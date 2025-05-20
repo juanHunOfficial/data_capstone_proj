@@ -1,6 +1,7 @@
 from etl import Etl_Pipeline
 from database_connector import DB_Connector
 from visualizations import Visualizations
+from menu import Menu
 
 def main() -> None:
     # Display for clarity to the user on what is happening
@@ -12,9 +13,11 @@ def main() -> None:
     etl = Etl_Pipeline()
     etl.run()
     # Now with the data in place make the visuals
-    visuals = Visualizations(db.cursor)
+    visuals = Visualizations(db.cursor) # <--- make separate menu for this and let it be called from the menu class.
     
     # Display the menu and have it run as needed
+    menu = Menu(db.conn, db.cursor)
+    menu.display_menu()
     
 if __name__ == "__main__":
     main()

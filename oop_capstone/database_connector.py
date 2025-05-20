@@ -87,8 +87,6 @@ class DB_Connector:
                 )
             """)
         # =========================================================================
-        # Commit changes and close connection
+        # Commit changes
         self.conn.commit()
-        self.cursor.close()
-        self.conn.close()
  # ---------------------------------------------------------------------------------------------------------------

@@ -211,7 +211,7 @@ class Visualizations:
         plt.tight_layout()
         plt.show()
  # ----------------------------------------------------------------------------------------------
-    def plot_healthcare_transactions(self) -> None: # < ------------ change this one
+    def plot_healthcare_transactions(self) -> None:
         """
             Problem Statement:
                 Calculate and plot which branch processed the highest total dollar value of 
@@ -224,35 +224,36 @@ class Visualizations:
                 left join cdw_sapp_branch cb on cc.branch_code = cb.branch_code
                 where cc.transaction_type = 'Healthcare'
                 group by cb.branch_code
-                order by sum(cc.transaction_value) desc;
+                order by sum(cc.transaction_value) desc
+                limit 10;
             """
         )
 
-        df = pd.DataFrame(self.cursor.fetchall(), columns=["Branch Code", "Total Spent on Healthcare"])
-
-        df_sorted = df.sort_values("Total Spent on Healthcare", ascending=False)
-
+        df = pd.DataFrame(self.cursor.fetchall(), columns=["Branch Code", "Total 10 Spent on Healthcare"])
+        df_sorted = df.sort_values("Total 10 Spent on Healthcare", ascending=False)
         top_spender = df_sorted.iloc[0]
 
-        # create a column that highlighting the top spender
+        # create a column that highlights the top spender
         df_sorted['highlight'] = df_sorted['Branch Code'] == top_spender['Branch Code']
 
-        # plot the horizontal bar chart
-        plt.figure(figsize=(10, 6))
+        # plot
+        plt.figure(figsize=(10, 10))
         sns.barplot(
             data=df_sorted,
             x="Branch Code",
-            y="Total Spent on Healthcare",
+            y="Total 10 Spent on Healthcare",
             hue="highlight",  # use hue to highlight the top spender
             palette={True: "green", False: "lightgray"},  # highlight the top spender in green
             dodge=False
         )
 
-        # title and labels
+        # Title and labels
         plt.title("Top Spending Branch in Healthcare")
         plt.xlabel("Branch Code")
-        plt.ylabel("Total Spent on Healthcare")
+        plt.ylabel("Total 10 Spent on Healthcare")
+        plt.yticks(range(0, 5000, 500))
         plt.tight_layout()
-        # Show the plot
+        # remove the legend (since we already have color for top spender)
+        plt.legend([], [], frameon=False)
         plt.show()
  # ----------------------------------------------------------------------------------------------
