@@ -4,7 +4,7 @@ class Menu:
 
     def __init__(self, conn: object, cursor: object) -> object: 
         """
-            Explanation of function:
+            Constructor function:
                 This is the Menu class' constructor. The connection and cursor are passed from the main.py.
                 The options dictionary is used for accessing the primary methods that wil be used in this
                 class, the helper methods are called as needed throughout these 4 main functions for easier
@@ -12,21 +12,33 @@ class Menu:
         """
         self.conn = conn
         self.cursor = cursor
+        # NOTE: these are stored without the '()' so tht they do not get called upon initialization
         self.options = {
-            '0' : self.conn.close(),
-            '1' : Menu.transaction_details(),
-            '2' : Menu.customer_details(),
-            '3' : Menu.monthly_bill_details(),
-            '4' : Menu.transactions_in_date_range()
+            '0' : self.close_connection,
+            '1' : self.transaction_details,
+            '2' : Menu.customer_details,
+            '3' : Menu.monthly_bill_details,
+            '4' : Menu.transactions_in_date_range
         }
  # ----------------------------------------------------------------------------------------------
+    def close_connection(self) -> None:
+        """
+            Parameters explained: 
+                None 
+
+            Return values:
+                None
+
+            Explanation of function: 
+                This function closes the connection to the database. 
+        """ 
+
+        self.conn.close()
+ # ----------------------------------------------------------------------------------------------   
     def display_menu(self) -> None:
         """
             Parameters explained: 
-                conn: is a database connection object that will be passed to each function that needs it to perform its tasks.
-                cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls. It is 
-                        passed and not invoked at the beginning of each function (e.g. conn.cursor()) for simplicity and readability.
-                        NOTE: The same results could have been achieved by simply passing the conn object and calling the cursor when needed.
+                None
             
             Return values:
                 None
@@ -59,7 +71,9 @@ class Menu:
                 Enter your value here: """).strip() # add strip() to account for white space
             print() # added to give some extra white space
             try: 
-                self.options[res]
+                action = self.options.get(res)
+                if action:
+                    action()
             except:
                 print("\nThat was an invalid response, please try again...\n")
             
@@ -69,7 +83,7 @@ class Menu:
     def transaction_details(self) -> None:
         """
             Parameters explained: 
-                cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls.
+                None
 
             Return values:
                 None
@@ -123,8 +137,7 @@ class Menu:
     def customer_details(self) -> None:
         """
             Parameters explained: 
-                conn: is the connection object used for committing the data in this case.
-                cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls.
+                None
 
             Return values:
                 None
@@ -240,7 +253,7 @@ class Menu:
     def monthly_bill_details(self) -> None:
         """
             Parameters explained: 
-                cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls.
+                None
 
             Return values:
                 None
@@ -284,7 +297,7 @@ class Menu:
     def transactions_in_date_range(self) -> None:
         """
             Parameters explained: 
-                cursor: is the cursor object from the conn.cursor() function, this is passed to make execution calls.
+                None
 
             Return values:
                 None
