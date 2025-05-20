@@ -1,12 +1,16 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
-from database_connector import DB_Connector
 import calendar
 
 class Visualizations:
 
     def __init__(self, cursor: object) -> object:
+        """
+            Constructor function:
+                This is the Visualizations class' constructor. The intent is each one of these functions will
+                be called as needed and displayed for the client to see.  
+        """
         # (only the cursor is needed for the visualizations)
         self.cursor = cursor
         # now select the database you wish to use.

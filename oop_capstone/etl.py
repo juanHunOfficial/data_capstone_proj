@@ -5,6 +5,12 @@ from pyspark.sql.functions import concat, lit, substring, lpad, col, initcap, lo
 class Etl_Pipeline:
 
     def __init__(self) -> object:
+        """
+            Constructor function:
+                This is the Etl_Pipeline class' constructor. The SparkSession is made and stored in the self.spark variable
+                and the dataframes that will be used are declared with empty strings for visual purposes. The intent is all 
+                the variables that will be used throughout the class in multiple functions will displayed in the __init__ method.   
+        """
         # NOTE: remember that you need to use a raw string because of the windows configuration
         self.spark = SparkSession.builder \
                 .appName('capstone-proj') \
@@ -17,6 +23,16 @@ class Etl_Pipeline:
         self.df_credit = ""
  # ---------------------------------------------------------------------------------------------------------------
     def extract(self) -> None:
+        """
+            Parameters explained: 
+                None 
+
+            Return values:
+                None
+
+            Explanation of function: 
+                This function will extract the data and store the in spark dataframes.
+        """ 
         # from the api
         res = requests.get("https://raw.githubusercontent.com/platformps/LoanDataset/main/loan_data.json") 
         json_data = res.json()
@@ -27,6 +43,52 @@ class Etl_Pipeline:
         self.df_credit = self.spark.read.option("multiLine", True).json('../origin_data/cdw_sapp_credit.json')
  # ---------------------------------------------------------------------------------------------------------------
     def transform(self) -> None:
+        """
+            Parameters explained: 
+                None 
+
+            Return values:
+                None
+
+            Explanation of function: 
+                This function conducts the transformations noted below, they will be separated by dataframe:
+                    ---------------- MAPPING DOCUMENT ----------------
+                    BRANCH TABLE:
+
+                        BRANCH_ZIP:
+                            - If the source value is null load default (99999) value else Direct move.
+
+                        BRANCH_PHONE:
+                            - Change the format of phone number to (XXX)XXX-XXXX
+                    
+                    CREDIT TABLE: 
+
+                        CREDIT_CARD_NO:
+                            - Change target field name to ---> CUST_CC_NO
+                    
+                        DAY, MONTH, YEAR:
+                            - Combine the three columns into one called ---> TIMEID and drop the other three. The format for
+                              for the TIMEID is (YYYYMMDD)
+
+                    CUSTOMER TABLE: 
+
+                        FIRST_NAME:
+                            - Convert the Name to Title Case
+
+                        MIDDLE_NAME:
+                            - Convert the middle name in lower case
+
+                        LAST_NAME:
+                            - Convert the Last Name in Title Case
+
+                        STREET_NAME, APT_NO:
+                            - Concatenate Apartment no and Street name of customer's Residence with comma as a separator (Street, Apartment)
+                            - Drop STREET_NAME and APT_NO
+
+                        CUST_PHONE:
+                            - Change the format of phone number to (XXX)XXX-XXXX
+                        
+        """ 
         # Fill missing 'BRANCH_ZIP' with 99999
         self.df_branch = self.df_branch \
             .fillna({'BRANCH_ZIP': 99999}) \
@@ -95,6 +157,18 @@ class Etl_Pipeline:
         # df_customer.show(10)
  # ---------------------------------------------------------------------------------------------------------------
     def load(self) -> None:
+        """
+            Parameters explained: 
+                None 
+
+            Return values:
+                None
+
+            Explanation of function: 
+                 This function will load the transformed data into the target database to be used by the client. The
+                 JDBC(Java Database Connectivity) connection properties are now declared an passed in the .jdbc() function
+                 which writes the transform data directly into the target database.  
+        """ 
         # MySQL JDBC connection properties
         url = "jdbc:mysql://localhost:3306/creditcard_capstone" 
         properties = {
@@ -113,6 +187,11 @@ class Etl_Pipeline:
         self.df_loan.write.jdbc(url=url, table="CDW_SAPP_LOAN_APPLICATION", mode="append", properties=properties)
  # ---------------------------------------------------------------------------------------------------------------
     def run(self) -> None:
+        """
+            Execution function: 
+                This function is controlling the etl portion of the program, the format for this pipeline is Extract, 
+                then Transform, and finally Load (ETL).
+        """ 
         self.extract()
         self.transform()
         self.load()
