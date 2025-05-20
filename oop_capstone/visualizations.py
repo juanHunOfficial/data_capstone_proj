@@ -34,7 +34,7 @@ class Visualizations:
         # setup my bar plot
         sns.set_theme(style='whitegrid')
         plt.figure(figsize=(10, 6))
-        ax = sns.barplot(data=df, x="Category", y="Amount of Orders", palette="crest")
+        ax = sns.barplot(data=df, x="Category", y="Amount of Orders", hue="Category", palette="crest")
 
         # add data labels
         for container in ax.containers:
@@ -64,7 +64,7 @@ class Visualizations:
         df = pd.DataFrame(self.cursor.fetchall(), columns=["State", "Number of Customers"])
         # bar plot of customers per state
         plt.figure(figsize=(10, 6))
-        sns.barplot(data=df, x="State", y="Number of Customers", palette="viridis")
+        sns.barplot(data=df, x="State", y="Number of Customers", hue="State", palette="viridis")
         plt.xlabel(xlabel="States")
         plt.title("Number of Customers by State")
         plt.grid(True, linestyle=':', linewidth=1, color='gray') 
@@ -88,18 +88,18 @@ class Visualizations:
                 limit 10;
             """
         )
-        # convert to a dataframe 
         df = pd.DataFrame(self.cursor.fetchall(), columns=["First Name", "Last Name", "Total"])
-        # combine to get the person's full name
+        # combine full name
         df["Customer"] = df["First Name"] + " " + df["Last Name"]
 
-        # plot
-        plt.figure(figsize=(10, 6))
-        sns.barplot(data=df, y="Customer", x="Total", palette="Blues_d")
+        ax = sns.barplot(data=df, y="Customer", x="Total", hue="Customer", palette="Blues_d")
+
+        # Plot
         plt.title("Top 10 Customers by Total Spending")
         plt.xlabel("Total Spent ($)")
         plt.ylabel("Customer")
-        plt.grid(True, linestyle=':', linewidth=1, color='gray') 
+        ax.set_xlim(5000, 5700)  # Zoom in on x-axis since bars run horizontally
+        plt.grid(True, linestyle=':', linewidth=1.2, color='gray')
         plt.tight_layout()
         plt.show()
  # ----------------------------------------------------------------------------------------------
@@ -175,7 +175,7 @@ class Visualizations:
         plt.tight_layout()
         plt.show()
  # ----------------------------------------------------------------------------------------------
-    def plot_top_three_months(self) -> None: # < ------------------------ change this one
+    def plot_top_three_months(self) -> None: 
         """
             Problem Statement:
                 Calculate and plot the top three months with the largest volume of transaction data. 
@@ -192,22 +192,21 @@ class Visualizations:
             """
         )
 
-        df = pd.DataFrame(self.cursor.fetchall(), columns=["Month", "Total Transactions"])
-        # convert the numbers returned to months in place
-        df['Month'] = df['Month'].apply(lambda x: calendar.month_name[int(x)])
+        df = pd.DataFrame(cursor.fetchall(), columns=["Month", "Total Transactions"])
+        df["Month"] = df["Month"].apply(lambda x: calendar.month_name[int(x)])
 
-        plt.figure(figsize=(8, 5))
+        sns.set_theme(style='whitegrid')
+        plt.figure(figsize=(8, 6))
+        ax = sns.barplot(data=df, x="Month", y="Total Transactions", hue="Month", palette="Set1", edgecolor="black")
 
-        # draw stems
-        plt.hlines(y=df["Month"], xmin=0, xmax=df["Total Transactions"], color='gray', linewidth=2)
+        for container in ax.containers:
+            ax.bar_label(container, fmt='%d', padding=3, fontsize=11)
 
-        # draw dots
-        plt.plot(df["Total Transactions"], df["Month"], "o", color="teal", markersize=10)
-
-        # labels and title
         plt.title("Top 3 Months by Total Transactions")
-        plt.xlabel("Total Transactions")
-        plt.ylabel("Month")
+        plt.xlabel("Month")
+        plt.ylabel("Total Transactions")
+        ax.set_ylim(3900, 3975)  # zoom in on the y-axis to exaggerate differences
+        plt.grid(True, linestyle=':', linewidth=1.2, color='gray')
         plt.tight_layout()
         plt.show()
  # ----------------------------------------------------------------------------------------------
