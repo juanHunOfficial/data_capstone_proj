@@ -14,11 +14,11 @@ class Menu:
         self.cursor = cursor
         # NOTE: these are stored without the '()' so tht they do not get called upon initialization
         self.options = {
-            '0' : self.close_connection,
-            '1' : self.transaction_details,
-            '2' : self.customer_details,
-            '3' : self.monthly_bill_details,
-            '4' : self.transactions_in_date_range
+            0 : self.close_connection,
+            1 : self.transaction_details,
+            2 : self.customer_details,
+            3 : self.monthly_bill_details,
+            4 : self.transactions_in_date_range
         }
  # ----------------------------------------------------------------------------------------------
     def close_connection(self) -> None:
@@ -64,20 +64,22 @@ class Menu:
             
                 0) Quit
                 1) Display Transaction Details
-                2) Display Customer Details
+                2) Manage Customer Details
                 3) Display Monthly Bill for Card Number Entered
                 4) Display Transactions Made by a Customer Between Two Dates
 
                 Enter your value here: """).strip() # add strip() to account for white space
             print() # added to give some extra white space
             try: 
+                res = int(res)
                 action = self.options.get(res)
-                if action:
-                    action()
             except:
                 print("\nThat was an invalid response, please try again...\n")
+
+            if action:
+                action()
             
-            if res == '0':
+            if res == 0:
                 break
  # ----------------------------------------------------------------------------------------------
     def transaction_details(self) -> None:
@@ -114,7 +116,7 @@ class Menu:
                 print("\nError, make sure your typing in a 5-digit value...\n")
 
         # get the month and the year
-        year, month, _ = Menu.get_year_month_day() # the last variable is for the day but because we are not using it an '_' was used
+        year, month, _ = self.get_year_month_day() # the last variable is for the day but because we are not using it an '_' was used
             
         # query the db and retrieve a list of transactions made by customers in the specified zipcode for the given month and year
         # run query
@@ -148,7 +150,7 @@ class Menu:
                 on the social security number that is entered. When the data is retrieved from the database it is then
                 converted to a pandas dataframe, displayed, and the while loop is terminated. The second while loop is the logic for updating the database
                 dynamically based on the parameters the user would like to change. The user will have to enter the column they
-                would like to change enter the value and submit it by entering in '2' in the menu. This will commit the 
+                would like to change enter the value and submit it by entering in '2' in the self. This will commit the 
                 changes and break the loop which ends the function. 
         """
         # Displaying customer info
@@ -188,7 +190,7 @@ class Menu:
             except Exception as e:
                 print("\nError {e}".format(e))
                 print("Please try again...\n")
-
+        
         # Updating customer info
         update_data = {}
         while True:
@@ -266,10 +268,10 @@ class Menu:
                 spent for the timeframe specified the breakdown in the form of the dataframe. 
         """
         # get the credit card number
-        cc_num = Menu.get_credit_card_number()
+        cc_num = self.get_credit_card_number()
 
         # get the month and the year
-        year, month, _ = Menu.get_year_month_day() # the last variable is for the day but because we are not using it an '_' was used
+        year, month, _ = self.get_year_month_day() # the last variable is for the day but because we are not using it an '_' was used
         # query the db for the desired output
         self.cursor.execute(
             """
@@ -307,15 +309,15 @@ class Menu:
                 month, and day in descending order.
         """
         # get the credit card number
-        cc_num = Menu.get_credit_card_number()
+        cc_num = self.get_credit_card_number()
         while True:
             # get the year, month, and day for both dates and assign them custom variables
             print("Enter the first date for the range")
-            year, month, day = Menu.get_year_month_day()
+            year, month, day = self.get_year_month_day()
             first_timeid = int(f"{year}{month}{day}")
 
             print("Enter the second date for the range")
-            year, month, day = Menu.get_year_month_day()
+            year, month, day = self.get_year_month_day()
             second_timeid = int(f"{year}{month}{day}")
 
             # check if the date range is good else prompt the user again

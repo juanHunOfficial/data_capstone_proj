@@ -6,7 +6,7 @@ class DB_Connector:
         self.host = host
         self.user = user
         self.password = password
-        self.conn = DB_Connector.make_connection() 
+        self.conn = DB_Connector.make_connection(self) 
         self.cursor = self.conn.cursor()
  # ---------------------------------------------------------------------------------------------------------------
     def make_connection(self) -> object:

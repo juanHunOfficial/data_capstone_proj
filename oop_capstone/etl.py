@@ -202,4 +202,4 @@ class Etl_Pipeline:
         self.extract()
         self.transform()
         self.load()
-        self.spark.close()
+        self.spark.stop()
