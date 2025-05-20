@@ -1,6 +1,6 @@
 import requests
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import concat, lit, substring, lpad, col, initcap, lower, trim, concat_ws
+from pyspark.sql.functions import concat, lit, substring, lpad, col, initcap, lower, trim, concat_ws, when, length
 
 class Etl_Pipeline:
 
@@ -92,6 +92,13 @@ class Etl_Pipeline:
         # Fill missing 'BRANCH_ZIP' with 99999
         self.df_branch = self.df_branch \
             .fillna({'BRANCH_ZIP': 99999}) \
+            .withColumn(
+                'BRANCH_ZIP', # cast the zip to a string and check if it is 5 digits long
+                when(         # if it is cast it back to an int, otherwise set it to '99999'
+                    length(col('BRANCH_ZIP').cast('string')) == 5,
+                    col('BRANCH_ZIP').cast('int')
+                ).otherwise(lit(99999))
+            ) \
             .withColumn(
                 # select the column I want to change 
                 'BRANCH_PHONE',
