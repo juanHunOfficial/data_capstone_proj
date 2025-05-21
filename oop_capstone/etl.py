@@ -104,8 +104,11 @@ class Etl_Pipeline:
                 'BRANCH_PHONE',
                 # use the concat function with the literal and substring functions to manipulate the data to what you want it to be similar to splicing
                 concat(
-                    lit("("), substring("BRANCH_PHONE", 1, 3), lit(")"),
-                    substring("BRANCH_PHONE", 4, 3), lit("-"),
+                    lit("("), 
+                    substring("BRANCH_PHONE", 1, 3), 
+                    lit(")"),
+                    substring("BRANCH_PHONE", 4, 3), 
+                    lit("-"),
                     substring("BRANCH_PHONE", 7, 4) 
                 )
             )
