@@ -135,7 +135,7 @@ class Menu:
             print("\nNo matching results for the given parameters.\n")
         else:
             print(f"\n{df}\n")
-    # ----------------------------------------------------------------------------------------------
+ # ----------------------------------------------------------------------------------------------
     def customer_details(self) -> None:
         """
             Parameters explained: 

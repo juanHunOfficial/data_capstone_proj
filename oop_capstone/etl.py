@@ -1,5 +1,7 @@
 import requests
+import csv
 from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame
 from pyspark.sql.functions import concat, lit, substring, lpad, col, initcap, lower, trim, concat_ws, when, length
 
 class Etl_Pipeline:
@@ -188,13 +190,82 @@ class Etl_Pipeline:
         }
         # Write the data to MySQL 
         # CDW_SAPP_BRANCH
+        branch_fields = [
+            'BRANCH_CODE',
+            'BRANCH_NAME',
+            'BRANCH_STREET',
+            'BRANCH_CITY',
+            'BRANCH_STATE',
+            'BRANCH_ZIP',
+            'BRANCH_PHONE',
+            'LAST_UPDATED'
+        ]
         self.df_branch.write.jdbc(url=url, table="CDW_SAPP_BRANCH", mode="append", properties=properties)
+        Etl_Pipeline.write_df_with_csv_writer(self.df_branch, 'data/branch_data.csv', branch_fields)
         # CDW_SAPP_CUSTOMER
+        customer_fields = [
+            'SSN',
+            'FIRST_NAME',
+            'MIDDLE_NAME',
+            'LAST_NAME',
+            'CREDIT_CARD_NO',
+            'FULL_STREET_ADDRESS',
+            'CUST_CITY',
+            'CUST_STATE',
+            'CUST_COUNTRY',
+            'CUST_ZIP',
+            'CUST_PHONE',
+            'CUST_EMAIL',
+            'LAST_UPDATED'
+        ]
         self.df_customer.write.jdbc(url=url, table="CDW_SAPP_CUSTOMER", mode="append", properties=properties)
+        Etl_Pipeline.write_df_with_csv_writer(self.df_customer, 'data/customer_data.csv', customer_fields)
         # CDW_SAPP_CREDIT_CARD
+        credit_fields = [
+            'TRANSACTION_ID',
+            'CUST_CC_NO',
+            'TIMEID',
+            'CUST_SSN',
+            'BRANCH_CODE',
+            'TRANSACTION_TYPE',
+            'TRANSACTION_VALUE'
+        ]
         self.df_credit.write.jdbc(url=url, table="CDW_SAPP_CREDIT_CARD", mode="append", properties=properties)
+        Etl_Pipeline.write_df_with_csv_writer(self.df_credit, 'data/credit_data.csv', credit_fields)
         # CDW_SAPP_LOAN_APPLICATION
+        loan_fields = [
+            'APPLICATION_ID',
+            'APPLICATION_STATUS',
+            'CREDIT_HISTORY',
+            'DEPENDENTS',
+            'EDUCATION',
+            'GENDER',
+            'INCOME',
+            'MARRIED',
+            'PROPERTY_AREA',
+            'SELF_EMPLOYED'
+        ]
         self.df_loan.write.jdbc(url=url, table="CDW_SAPP_LOAN_APPLICATION", mode="append", properties=properties)
+        Etl_Pipeline.write_df_with_csv_writer(self.df_loan, 'data/loan_data.csv', loan_fields)
+ # ---------------------------------------------------------------------------------------------------------------
+    def write_df_with_csv_writer(df, output_csv_path, fieldnames):
+        """
+            Writes a PySpark DataFrame to a single CSV file using csv.DictWriter.
+
+            Parameters:
+                - df: PySpark DataFrame
+                - output_csv_path: str — Path to output .csv file
+                - fieldnames: list — Column names (in order) for CSV header
+        """
+        # Collect rows to driver as list of Row objects
+        data = df.select(fieldnames).collect()
+
+        # Open file and write
+        with open(output_csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in data:
+                writer.writerow(row.asDict())
  # ---------------------------------------------------------------------------------------------------------------
     def run(self) -> None:
         """
