@@ -1,6 +1,5 @@
 from etl import Etl_Pipeline
 from database_connector import DB_Connector
-from visualizations import Visualizations
 from menu import Menu
 
 def main() -> None:
@@ -14,9 +13,7 @@ def main() -> None:
     print("Running the pipeline...")
     etl = Etl_Pipeline()
     etl.run()
-    # Now with the data in place make the visuals
-    print("Making the visuals...")
-    visuals = Visualizations(db.cursor) # <--- make separate menu for this and let it be called from the menu class.
+    # Visualizations went here but it has been removed because now it is all done in tableau
     print(""" ADDED FOR VISUAL CLARITY ON THE CLI
 
 
