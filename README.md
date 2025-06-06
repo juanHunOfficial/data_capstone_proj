@@ -58,24 +58,24 @@ The transformation logic adheres strictly to the mapping document provided by Pe
 ---
 
 ## 📂 Repository Structure
-
-📁 origin_data/
-└── Raw JSON data files
-📁 functional_capstone/
-├── capstone_etl.py
-├── front_end.py
-├── main.py
-├── test_visuals.ipynb
-└── visualizations.py
-📁 oop_capstone/
-├── data/
-├── database_connector.py
-├── etl.py
-├── main.py
-├── menu.py
-├── requirements.txt
-└── visualizations.py
-
+```
+    📁 origin_data/
+    └── Raw JSON data files
+    📁 functional_capstone/
+    ├── capstone_etl.py
+    ├── front_end.py
+    ├── main.py
+    ├── test_visuals.ipynb
+    └── visualizations.py
+    📁 oop_capstone/
+    ├── data/
+    ├── database_connector.py
+    ├── etl.py
+    ├── main.py
+    ├── menu.py
+    ├── requirements.txt
+    └── visualizations.py
+```
 
 ---
 
